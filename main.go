@@ -4,9 +4,13 @@ import (
 	"log"
 	"net"
 	"time"
+	"os"
+	"fmt"
+	"io"
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
+	tftp "github.com/pin/tftp/v3"
 )
 
 func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
@@ -39,6 +43,16 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(hours))
 		hours, _ = time.ParseDuration("3h")
 		reply.UpdateOption(dhcpv4.OptRebindingTimeValue(hours))
+		log.Println(m.ClientArch())
+		if arch := m.ClientArch(); len(arch) > 0 {
+			switch arch[0] {
+			case 7:
+				// EFI_X86_64
+				reply.UpdateOption(dhcpv4.OptBootFileName("syslinux.efi"))
+			default:
+				reply.UpdateOption(dhcpv4.OptBootFileName("pxelinux.0"))
+			}
+		}
 	case dhcpv4.MessageTypeRequest:
 		reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
 		reply.YourIPAddr = net.IPv4(10,0,2,100)
@@ -52,6 +66,15 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(hours))
 		hours, _ = time.ParseDuration("3h")
 		reply.UpdateOption(dhcpv4.OptRebindingTimeValue(hours))
+		if arch := m.ClientArch(); len(arch) > 0 {
+			switch arch[0] {
+			case 7:
+				// EFI_X86_64
+				reply.UpdateOption(dhcpv4.OptBootFileName("syslinux.efi"))
+			default:
+				reply.UpdateOption(dhcpv4.OptBootFileName("pxelinux.0"))
+			}
+		}
 	default:
 		log.Printf("Unhandled message type: %v", mt)
 		return
@@ -62,6 +85,35 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	}
 	log.Print(reply.Summary())
 }
+
+// readHandler is called when client starts file download from server
+func readHandler(filename string, rf io.ReaderFrom) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+	n, err := rf.ReadFrom(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+	fmt.Printf("%d bytes sent\n", n)
+	return nil
+}
+
+
+func runtftp() {
+	// use nil in place of handler to disable read or write operations
+	s := tftp.NewServer(readHandler, nil)
+	s.SetTimeout(5 * time.Second) // optional
+	err := s.ListenAndServe(":69") // blocks until s.Shutdown() is called
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "server: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 
 func main() {
 	laddr := net.UDPAddr{
@@ -75,5 +127,6 @@ func main() {
 
 	// This never returns. If you want to do other stuff, dump it into a
 	// goroutine.
-	server.Serve()
+	go server.Serve()
+	runtftp()
 }
