@@ -1,16 +1,14 @@
 package main
 
 import (
-	"log"
-	"net"
-	"time"
-	"os"
-	"fmt"
+	"embed"
 	"io"
 	"io/fs"
-	"strings"
+	"net"
+	"os"
 	"path/filepath"
-	"embed"
+	"strings"
+	"time"
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
@@ -22,30 +20,30 @@ var tftpRoot embed.FS
 
 func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	// this function will just print the received DHCPv4 message, without replying
-	// log.Print(m.Summary())
+	Debug(m.Summary())
 
 	// from coredhcp
 	if m.OpCode != dhcpv4.OpcodeBootRequest {
-		log.Printf("unsupported opcode %d. Only BootRequest (%d) is supported", m.OpCode, dhcpv4.OpcodeBootRequest)
+		Error("unsupported opcode: ", m.OpCode, ". Only BootRequest (", dhcpv4.OpcodeBootRequest, ") is supported")
 		return
 	}
 
 	reply, err := dhcpv4.NewReplyFromRequest(m)
 	if err != nil {
-		log.Printf("failed to build reply: %v", err)
+		Error("failed to build reply: ", err)
 		return
 	}
 
 	switch mt := m.MessageType(); mt {
 	case dhcpv4.MessageTypeDiscover:
-		reply.YourIPAddr = net.IPv4(10,0,2,100)
-		reply.ServerIPAddr = net.IPv4(10,0,2,5)
+		reply.YourIPAddr = net.IPv4(10, 0, 2, 100)
+		reply.ServerIPAddr = net.IPv4(10, 0, 2, 5)
 		reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeOffer))
-		reply.UpdateOption(dhcpv4.OptServerIdentifier(net.IPv4(10,0,2,5)))
+		reply.UpdateOption(dhcpv4.OptServerIdentifier(net.IPv4(10, 0, 2, 5)))
 		reply.UpdateOption(dhcpv4.OptSubnetMask(net.IPv4Mask(255, 255, 255, 0)))
-		reply.UpdateOption(dhcpv4.OptBroadcastAddress(net.IPv4(10,0,2,255)))
-		reply.UpdateOption(dhcpv4.OptDNS(net.IPv4(10,0,2,1)))
-		reply.UpdateOption(dhcpv4.OptRouter(net.IPv4(10,0,2,1)))
+		reply.UpdateOption(dhcpv4.OptBroadcastAddress(net.IPv4(10, 0, 2, 255)))
+		reply.UpdateOption(dhcpv4.OptDNS(net.IPv4(10, 0, 2, 1)))
+		reply.UpdateOption(dhcpv4.OptRouter(net.IPv4(10, 0, 2, 1)))
 		hours, _ := time.ParseDuration("1h")
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(hours))
 		hours, _ = time.ParseDuration("3h")
@@ -61,13 +59,13 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		}
 	case dhcpv4.MessageTypeRequest:
 		reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
-		reply.YourIPAddr = net.IPv4(10,0,2,100)
-		reply.ServerIPAddr = net.IPv4(10,0,2,5)
-		reply.UpdateOption(dhcpv4.OptServerIdentifier(net.IPv4(10,0,2,5)))
+		reply.YourIPAddr = net.IPv4(10, 0, 2, 100)
+		reply.ServerIPAddr = net.IPv4(10, 0, 2, 5)
+		reply.UpdateOption(dhcpv4.OptServerIdentifier(net.IPv4(10, 0, 2, 5)))
 		reply.UpdateOption(dhcpv4.OptSubnetMask(net.IPv4Mask(255, 255, 255, 0)))
-		reply.UpdateOption(dhcpv4.OptBroadcastAddress(net.IPv4(10,0,2,255)))
-		reply.UpdateOption(dhcpv4.OptDNS(net.IPv4(10,0,2,1)))
-		reply.UpdateOption(dhcpv4.OptRouter(net.IPv4(10,0,2,1)))
+		reply.UpdateOption(dhcpv4.OptBroadcastAddress(net.IPv4(10, 0, 2, 255)))
+		reply.UpdateOption(dhcpv4.OptDNS(net.IPv4(10, 0, 2, 1)))
+		reply.UpdateOption(dhcpv4.OptRouter(net.IPv4(10, 0, 2, 1)))
 		hours, _ := time.ParseDuration("1h")
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(hours))
 		hours, _ = time.ParseDuration("3h")
@@ -82,21 +80,22 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 			}
 		}
 	default:
-		log.Printf("Unhandled message type: %v", mt)
+		Info("Unhandled message type: ", mt)
 		return
 	}
 
 	if _, err := conn.WriteTo(reply.ToBytes(), peer); err != nil {
-		log.Printf("Cannot reply to client: %v", err)
+		Error("Cannot reply to client: ", err)
 	}
-	// log.Print(reply.Summary())
+	Debug(reply.Summary())
 }
 
 func overWrite(filename string) string {
+	Debug("Raw filename: ", filename)
 	if filepath.IsAbs(filename) {
 		filename = strings.Replace(filename, "/", "", 1)
 	}
-	fmt.Fprintf(os.Stderr, "want to open file: %v\n", filename)
+	Debug("overWrited filename: ", filename)
 	return filename
 }
 
@@ -108,39 +107,37 @@ func readHandler(filename string, rf io.ReaderFrom) error {
 	filename = overWrite(filename)
 	file, err := root.Open(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		Error(err)
 		return err
 	}
 	n, err := rf.ReadFrom(file)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		Error(err)
 		return err
 	}
-	fmt.Printf("%d bytes sent\n", n)
+	Info("sent ", n, " bytes")
 	return nil
 }
-
 
 func runtftp() {
 	// use nil in place of handler to disable read or write operations
 	s := tftp.NewServer(readHandler, nil)
-	s.SetTimeout(5 * time.Second) // optional
+	s.SetTimeout(5 * time.Second)  // optional
 	err := s.ListenAndServe(":69") // blocks until s.Shutdown() is called
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "server: %v\n", err)
-		os.Exit(1)
+		Panic("server: ", err)
 	}
 }
 
-
 func main() {
+	Initial("debug", os.Stdout)
 	laddr := net.UDPAddr{
 		IP:   net.ParseIP("0.0.0.0"),
 		Port: 67,
 	}
 	server, err := server4.NewServer("enp0s3", &laddr, handler)
 	if err != nil {
-		log.Fatal(err)
+		Fatal(err)
 	}
 
 	// This never returns. If you want to do other stuff, dump it into a

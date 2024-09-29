@@ -1,8 +1,8 @@
-DEFAULT loop
-DISPLAY pxelinux.cfg/message
+DEFAULT help
+DISPLAY message
 PROMPT 1
 
-LABEL loop
+LABEL help
     CONFIG pxelinux.cfg/default
 
 LABEL 1
