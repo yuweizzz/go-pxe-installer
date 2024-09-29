@@ -7,15 +7,22 @@ import (
 	"os"
 	"fmt"
 	"io"
+	"io/fs"
+	"strings"
+	"path/filepath"
+	"embed"
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
 	tftp "github.com/pin/tftp/v3"
 )
 
+//go:embed tftpboot
+var tftpRoot embed.FS
+
 func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	// this function will just print the received DHCPv4 message, without replying
-	log.Print(m.Summary())
+	// log.Print(m.Summary())
 
 	// from coredhcp
 	if m.OpCode != dhcpv4.OpcodeBootRequest {
@@ -43,7 +50,6 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(hours))
 		hours, _ = time.ParseDuration("3h")
 		reply.UpdateOption(dhcpv4.OptRebindingTimeValue(hours))
-		log.Println(m.ClientArch())
 		if arch := m.ClientArch(); len(arch) > 0 {
 			switch arch[0] {
 			case 7:
@@ -83,12 +89,24 @@ func handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	if _, err := conn.WriteTo(reply.ToBytes(), peer); err != nil {
 		log.Printf("Cannot reply to client: %v", err)
 	}
-	log.Print(reply.Summary())
+	// log.Print(reply.Summary())
+}
+
+func overWrite(filename string) string {
+	if filepath.IsAbs(filename) {
+		filename = strings.Replace(filename, "/", "", 1)
+	}
+	fmt.Fprintf(os.Stderr, "want to open file: %v\n", filename)
+	return filename
 }
 
 // readHandler is called when client starts file download from server
 func readHandler(filename string, rf io.ReaderFrom) error {
-	file, err := os.Open(filename)
+	// enter root filesystem
+	root, _ := fs.Sub(tftpRoot, "tftpboot")
+	// use relative path to access file
+	filename = overWrite(filename)
+	file, err := root.Open(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return err

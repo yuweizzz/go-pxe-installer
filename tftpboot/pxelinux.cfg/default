@@ -1,0 +1,11 @@
+DEFAULT loop
+DISPLAY pxelinux.cfg/message
+PROMPT 1
+
+LABEL loop
+    CONFIG pxelinux.cfg/default
+
+LABEL 1
+    KERNEL images/debian-bookworm-amd64/linux
+    INITRD images/debian-bookworm-amd64/initrd.gz
+    APPEND vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/images/debian-bookworm-amd64/preseed.cfg
