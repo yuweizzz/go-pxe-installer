@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"io"
 	"io/fs"
 	"path/filepath"
@@ -43,12 +44,13 @@ func readHandler(filename string, rf io.ReaderFrom) error {
 	return nil
 }
 
-func Runtftp() {
+func Runtftp(port int) {
 	// use nil in place of handler to disable read or write operations
+	address := fmt.Sprintf(":%d", port)
 	s := tftp.NewServer(readHandler, nil)
-	s.SetTimeout(5 * time.Second)  // optional
-	err := s.ListenAndServe(":69") // blocks until s.Shutdown() is called
+	s.SetTimeout(5 * time.Second)
+	err := s.ListenAndServe(address)
 	if err != nil {
-		Panic("server: ", err)
+		Panic("tftp server: ", err)
 	}
 }

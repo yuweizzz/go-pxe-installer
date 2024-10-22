@@ -1,0 +1,6 @@
+iface: enp0s3
+ipaddr: 10.0.2.5
+dhcp:
+  port: 67
+tftp:
+  port: 69

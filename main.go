@@ -6,12 +6,15 @@ import (
 	"syscall"
 )
 
-var serverIPAddr = "10.0.2.5"
+var serverIPAddr string
 
 func main() {
 	Initial("debug", os.Stdout)
-	go Rundhcp("enp0s3", 67)
-	go Runtftp()
+	Conf := &Config{}
+	Conf.ParseConfig("config.yaml")
+	serverIPAddr = Conf.IPAddr
+	go Rundhcp(Conf.Iface, Conf.DHCP.Port)
+	go Runtftp(Conf.TFTP.Port)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
