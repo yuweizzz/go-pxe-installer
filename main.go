@@ -1,25 +1,26 @@
 package main
 
 import (
-	"net"
 	"os"
-
-	"github.com/insomniacslk/dhcp/dhcpv4/server4"
+	"os/signal"
+	"syscall"
 )
+
+var serverIPAddr = "10.0.2.5"
 
 func main() {
 	Initial("debug", os.Stdout)
-	laddr := net.UDPAddr{
-		IP:   net.ParseIP("0.0.0.0"),
-		Port: 67,
-	}
-	server, err := server4.NewServer("enp0s3", &laddr, DHCPHandler)
-	if err != nil {
-		Fatal(err)
-	}
+	go Rundhcp("enp0s3", 67)
+	go Runtftp()
 
-	// This never returns. If you want to do other stuff, dump it into a
-	// goroutine.
-	go server.Serve()
-	Runtftp()
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	done := make(chan bool, 1)
+	go func() {
+		<-sigs
+		done <- true
+	}()
+	Info("Awaiting signal ......")
+	<-done
+	Info("Except signal, exiting ......")
 }
