@@ -1,19 +1,30 @@
 package main
 
 import (
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-var serverIPAddr string
-
 func main() {
-	Initial("debug", os.Stdout)
+	// config
 	Conf := &Config{}
 	Conf.ParseConfig("config.yaml")
-	serverIPAddr = Conf.IPAddr
-	go Rundhcp(Conf.Iface, Conf.DHCP.Port)
+	// logger
+	Initial(Conf.Logger.Level, InitialFD(Conf.Logger.File))
+	// dhcp
+	ip := net.ParseIP(Conf.IPAddr)
+	dhcpServer := &DHCPServer{
+		Handler: &DHCPHandler{
+			DHCPAddr: ip,
+			TFTPAddr: ip,
+		},
+		Iface: Conf.Iface,
+		Port:  Conf.DHCP.Port,
+	}
+	go dhcpServer.Run()
+	// tftp
 	go Runtftp(Conf.TFTP.Port)
 
 	sigs := make(chan os.Signal, 1)

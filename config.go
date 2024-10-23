@@ -9,8 +9,14 @@ import (
 type Config struct {
 	Iface  string     `yaml:"iface"`
 	IPAddr string     `yaml:"ipaddr"`
+	Logger Logger     `yaml:"logger"`
 	DHCP   DHCPConfig `yaml:"dhcp"`
 	TFTP   TFTPConfig `yaml:"tftp"`
+}
+
+type Logger struct {
+	Level string `yaml:"level"`
+	File  string `yaml:"file"`
 }
 
 type DHCPConfig struct {
@@ -24,10 +30,10 @@ type TFTPConfig struct {
 func (c *Config) ParseConfig(filepath string) {
 	file, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		Error("failed to open config file: ", err)
+		panic(err)
 	}
 	err = yaml.Unmarshal(file, c)
 	if err != nil {
-		Error("failed to unmarshal yaml file: ", err)
+		panic(err)
 	}
 }

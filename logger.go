@@ -73,6 +73,21 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(output), nil
 }
 
+func InitialFD(file string) *os.File {
+	if file == "/dev/stdout" {
+		return os.Stdout
+	}
+	fd, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_EXCL|os.O_APPEND, 0644)
+	if fd == nil {
+		fd, err := os.OpenFile(file, os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			panic(err)
+		}
+		return fd
+	}
+	return fd
+}
+
 func Initial(LogLevel string, fd *os.File) {
 	level, ok := logLevels[strings.ToUpper(LogLevel)]
 	if !ok {

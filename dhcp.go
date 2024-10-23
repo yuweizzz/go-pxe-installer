@@ -9,7 +9,30 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
 )
 
-func DHCPHandler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
+type DHCPHandler struct {
+	DHCPAddr net.IP
+	TFTPAddr net.IP
+}
+
+type DHCPServer struct {
+	Handler *DHCPHandler
+	Iface   string
+	Port    int
+}
+
+func (s *DHCPServer) Run() {
+	laddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf(":%d", s.Port))
+	if err != nil {
+		Fatal(err)
+	}
+	server, err := server4.NewServer(s.Iface, laddr, s.Handler.Update)
+	if err != nil {
+		Fatal(err)
+	}
+	server.Serve()
+}
+
+func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	// print the received DHCPv4 message
 	Debug(m.Summary())
 
@@ -51,11 +74,11 @@ func DHCPHandler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 	// 4
 	reply.SetBroadcast()
 	reply.YourIPAddr = net.IPv4(0, 0, 0, 0)
-	reply.ServerIPAddr = net.ParseIP(serverIPAddr)
+	reply.ServerIPAddr = h.DHCPAddr
 	// Option 60
 	reply.UpdateOption(dhcpv4.OptClassIdentifier("PXEClient"))
 	// Option 66, Next server IP address
-	reply.UpdateOption(dhcpv4.OptTFTPServerName(serverIPAddr))
+	reply.UpdateOption(dhcpv4.OptTFTPServerName(h.TFTPAddr.String()))
 	// Option 67
 	if arch := m.ClientArch(); len(arch) > 0 {
 		switch arch[0] {
@@ -71,17 +94,4 @@ func DHCPHandler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		Error("Cannot reply to client: ", err)
 	}
 	Debug(reply.Summary())
-}
-
-func Rundhcp(iface string, port int) {
-	address := fmt.Sprintf(":%d", port)
-	laddr, err := net.ResolveUDPAddr("udp4", address)
-	if err != nil {
-		Fatal(err)
-	}
-	server, err := server4.NewServer(iface, laddr, DHCPHandler)
-	if err != nil {
-		Fatal(err)
-	}
-	server.Serve()
 }

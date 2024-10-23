@@ -1,5 +1,8 @@
 iface: enp0s3
 ipaddr: 10.0.2.5
+logger:
+  level: debug
+  file: /dev/stdout
 dhcp:
   port: 67
 tftp:
