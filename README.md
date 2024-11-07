@@ -42,6 +42,10 @@ tftp:
 
 安装完成后需要重新调整启动顺序为硬盘优先。
 
+## Todo
+
+- [ ] 当前的 pxelinux.cfg/default 文件需要渲染 tftp 地址，否则应该手动修改后重新编译。
+
 ## Where file from
 
 ### PXE boot
