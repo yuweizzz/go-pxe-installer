@@ -1,4 +1,4 @@
-module t
+module go-pxe-installer
 
 go 1.21.0
 

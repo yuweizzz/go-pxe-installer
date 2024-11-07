@@ -1,4 +1,5 @@
 iface: enp0s3
+# must setup ipaddr because we need to setup tftp server info
 ipaddr: 10.0.2.5
 logger:
   level: debug
