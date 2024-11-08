@@ -12,28 +12,10 @@ import (
 	"text/template"
 )
 
-const OPTIONS = `DISPLAY message
-PROMPT 1
-`
-
-type Entry struct {
-	Label  string
-	Config string
-	Kernel string
-	Initrd string
-	Append string
-}
-
-type BootConfig struct {
-	DefaultEntry string
-	Entries      map[string]Entry
-	Options      string
-}
-
 type TFTPHandler struct {
-	Root       embed.FS
-	TftpAddr   net.IP
-	BootConfig BootConfig
+	Root      embed.FS
+	TftpAddr  net.IP
+	PXEConfig PXEConfig
 }
 
 func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
@@ -46,30 +28,12 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	}
 	Debug("overWrited filename: ", filename)
 	if filename == "pxelinux.cfg/default" || filename == "message" {
-		help := Entry{
-			Label:  "help",
-			Config: "pxelinux.cfg/default",
-		}
-		debian12 := Entry{
-			Label:  "1",
-			Kernel: "images/debian-bookworm-amd64/linux",
-			Initrd: "images/debian-bookworm-amd64/initrd.gz",
-			Append: fmt.Sprintf("vga=normal fb=false auto=true priority=critical preseed/url=tftp://%s/images/debian-bookworm-amd64/preseed.cfg", h.TftpAddr.String()),
-		}
-		entries := make(map[string]Entry, 10)
-		entries["help"] = help
-		entries["1"] = debian12
-		boot := &BootConfig{
-			DefaultEntry: "help",
-			Entries:      entries,
-			Options:      OPTIONS,
-		}
 		var reader *bytes.Buffer
 		if filename == "pxelinux.cfg/default" {
-			reader = boot.String()
+			reader = h.PXEConfig.String()
 		}
 		if filename == "message" {
-			reader = boot.DisplayMessage()
+			reader = h.PXEConfig.DisplayMessage()
 		}
 		n, err := rf.ReadFrom(reader)
 		if err != nil {
@@ -93,7 +57,7 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	return nil
 }
 
-func (b *BootConfig) String() *bytes.Buffer {
+func (b *PXEConfig) String() *bytes.Buffer {
 	const BootConfigTpl = `
 {{define "entryTpl"}}LABEL {{.Label}}
     {{if .Config}}CONFIG {{.Config}}{{end}}
@@ -102,7 +66,8 @@ func (b *BootConfig) String() *bytes.Buffer {
     {{if .Append}}APPEND {{.Append}}{{end}}
 {{end}}
 DEFAULT {{.DefaultEntry}}
-{{.Options}}
+DISPLAY message
+PROMPT 1
 
 {{ range $value := .Entries }}{{ template "entryTpl" $value }}{{ end }}
 `
@@ -115,9 +80,9 @@ DEFAULT {{.DefaultEntry}}
 	return buf
 }
 
-func (b *BootConfig) DisplayMessage() *bytes.Buffer {
+func (b *PXEConfig) DisplayMessage() *bytes.Buffer {
 	const MessageTpl = `Select the boot option and Press the corresponding number:
-{{ range $key, $value := .Entries }}{{ $value.Label }}	{{ $value.Label }}
+{{ range $key, $value := .Entries }}{{ $value.Label }}	{{ $value.Display }}
 {{ end }}
 `
 	buf := &bytes.Buffer{}

@@ -12,6 +12,7 @@ type Config struct {
 	Logger Logger     `yaml:"logger"`
 	DHCP   DHCPConfig `yaml:"dhcp"`
 	TFTP   TFTPConfig `yaml:"tftp"`
+	PXE    PXEConfig  `yaml:"pxe"`
 }
 
 type Logger struct {
@@ -25,6 +26,20 @@ type DHCPConfig struct {
 
 type TFTPConfig struct {
 	Port int `yaml:"port"`
+}
+
+type Entry struct {
+	Label   string `yaml:"label"`
+	Config  string `yaml:"config"`
+	Display string `yaml:"display"`
+	Kernel  string `yaml:"kernel"`
+	Initrd  string `yaml:"initrd"`
+	Append  string `yaml:"append"`
+}
+
+type PXEConfig struct {
+	DefaultEntry string  `yaml:"default"`
+	Entries      []Entry `yaml:"entries"`
 }
 
 func (c *Config) ParseConfig(filepath string) {

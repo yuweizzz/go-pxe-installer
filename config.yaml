@@ -8,3 +8,14 @@ dhcp:
   port: 67
 tftp:
   port: 69
+pxe:
+  default: 0
+  entries:
+    - label: 0
+      display: help
+      config: pxelinux.cfg/default
+    - label: 1
+      display: Debian-12-bookworm-autoinstall
+      kernel: images/debian-bookworm-amd64/linux
+      initrd: images/debian-bookworm-amd64/initrd.gz
+      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/images/debian-bookworm-amd64/preseed.cfg

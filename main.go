@@ -31,8 +31,9 @@ func main() {
 	// tftp
 	tftpServer := &TFTPServer{
 		Handler: &TFTPHandler{
-			Root:     tftpRoot,
-			TftpAddr: ip,
+			Root:      tftpRoot,
+			TftpAddr:  ip,
+			PXEConfig: Conf.PXE,
 		},
 		Port: Conf.TFTP.Port,
 	}
