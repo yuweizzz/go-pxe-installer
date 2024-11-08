@@ -1,11 +1,15 @@
 package main
 
 import (
+	"embed"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 )
+
+//go:embed tftpboot
+var tftpRoot embed.FS
 
 func main() {
 	// config
@@ -25,7 +29,14 @@ func main() {
 	}
 	go dhcpServer.Run()
 	// tftp
-	go Runtftp(Conf.TFTP.Port)
+	tftpServer := &TFTPServer{
+		Handler: &TFTPHandler{
+			Root:     tftpRoot,
+			TftpAddr: ip,
+		},
+		Port: Conf.TFTP.Port,
+	}
+	go tftpServer.Run()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
