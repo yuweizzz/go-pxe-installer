@@ -18,4 +18,5 @@ pxe:
       display: Debian-12-bookworm-autoinstall
       kernel: images/debian-bookworm-amd64/linux
       initrd: images/debian-bookworm-amd64/initrd.gz
+      # the tftp server should follow the value of ipaddr
       append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/images/debian-bookworm-amd64/preseed.cfg

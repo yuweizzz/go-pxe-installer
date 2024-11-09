@@ -25,6 +25,19 @@ dhcp:
   port: 67
 tftp:
   port: 69
+pxe:
+  # 默认打印信息，不安装任何镜像
+  default: 0
+  entries:
+    - label: 0
+      display: help
+      config: pxelinux.cfg/default
+    - label: 1
+      display: Debian-12-bookworm-autoinstall
+      kernel: images/debian-bookworm-amd64/linux
+      initrd: images/debian-bookworm-amd64/initrd.gz
+      # 这里的 tftp server 和 ipaddr 的值保持一致，也可以使用外部自定义的 preseed 文件
+      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/images/debian-bookworm-amd64/preseed.cfg
 ```
 
 ### Orcale VM VirtualBox
@@ -44,7 +57,9 @@ tftp:
 
 ## Todo
 
-- [ ] 当前的 pxelinux.cfg/default 文件需要渲染 tftp 地址，否则应该手动修改后重新编译。
+- [x] ~~当前的 pxelinux.cfg/default 文件需要渲染 tftp 地址，否则应该手动修改后重新编译。~~
+- [ ] 允许镜像从远程拉取。
+- [ ] 指定额外的本地 tftp 目录。
 
 ## Where file from
 
