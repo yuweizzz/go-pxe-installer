@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"io/ioutil"
+	"text/template"
 
 	yaml "gopkg.in/yaml.v3"
 )
@@ -51,4 +53,41 @@ func (c *Config) ParseConfig(filepath string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (c *PXEConfig) ConfigReader() (*bytes.Buffer, error) {
+	const BootConfigTpl = `
+{{define "entryTpl"}}LABEL {{.Label}}
+    {{if .Config}}CONFIG {{.Config}}{{end}}
+    {{if .Kernel}}KERNEL {{.Kernel}}{{end}}
+    {{if .Initrd}}INITRD {{.Initrd}}{{end}}
+    {{if .Append}}APPEND {{.Append}}{{end}}
+{{end}}
+DEFAULT {{.DefaultEntry}}
+DISPLAY message
+PROMPT 1
+
+{{ range $value := .Entries }}{{ template "entryTpl" $value }}{{ end }}
+`
+	buf := &bytes.Buffer{}
+	tpl := template.Must(template.New("BootConfigTpl").Parse(BootConfigTpl))
+	if err := tpl.ExecuteTemplate(buf, "BootConfigTpl", c); err != nil {
+		return nil, err
+	}
+	Debug("PXEConfig.ConfigReader.String():\n", buf.String())
+	return buf, nil
+}
+
+func (c *PXEConfig) MessageReader() (*bytes.Buffer, error) {
+	const MessageTpl = `Select the boot option and Press the corresponding number:
+{{ range $key, $value := .Entries }}{{ $value.Label }}	{{ $value.Display }}
+{{ end }}
+`
+	buf := &bytes.Buffer{}
+	tpl := template.Must(template.New("MessageTpl").Parse(MessageTpl))
+	if err := tpl.ExecuteTemplate(buf, "MessageTpl", c); err != nil {
+		return nil, err
+	}
+	Debug("PXEConfig.MessageReader.String():\n", buf.String())
+	return buf, nil
 }
