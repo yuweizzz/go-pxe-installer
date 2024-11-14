@@ -15,9 +15,10 @@ const DefaultPxeCfgPath = "pxelinux.cfg/default"
 const DefaultPxePrompt = "prompt"
 
 type TFTPHandler struct {
-	Root      embed.FS
-	TftpAddr  net.IP
-	PXEConfig PXEConfig
+	EmbedRoot    embed.FS
+	ExternalRoot fs.FS
+	TftpAddr     net.IP
+	PXEConfig    PXEConfig
 }
 
 func HttpReader(path string) (io.ReadCloser, error) {
@@ -52,8 +53,18 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	// http
 	if u.Scheme == "http" || u.Scheme == "https" {
 		reader, err = HttpReader(path)
-		// tftp
-	} else {
+		if err != nil {
+			return err
+		}
+	} else if h.ExternalRoot != nil {
+		// tftp external
+		reader, err = h.ExternalRoot.Open(path)
+		if err != nil {
+			Error("lookup external fs failed, will fallback to embed fs, err: ", err)
+		}
+	}
+	// fallback to tftp embed
+	if reader == nil {
 		switch path {
 		case DefaultPxeCfgPath:
 			reader, err = h.PXEConfig.ConfigReader()
@@ -61,12 +72,12 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 			reader, err = h.PXEConfig.PromptReader()
 		default:
 			// enter root filesystem
-			root, _ := fs.Sub(h.Root, "tftpboot")
+			root, _ := fs.Sub(h.EmbedRoot, "tftpboot")
 			reader, err = root.Open(path)
 		}
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	n, err := rf.ReadFrom(reader.(io.Reader))
 	if err != nil {

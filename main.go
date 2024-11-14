@@ -31,11 +31,12 @@ func main() {
 	// tftp
 	tftpServer := &TFTPServer{
 		Handler: &TFTPHandler{
-			Root:      tftpRoot,
+			EmbedRoot: tftpRoot,
 			TftpAddr:  ip,
 			PXEConfig: Conf.PXE,
 		},
-		Port: Conf.TFTP.Port,
+		Port:     Conf.TFTP.Port,
+		External: Conf.TFTP.External,
 	}
 	go tftpServer.Run()
 

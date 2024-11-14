@@ -8,6 +8,8 @@ dhcp:
   port: 67
 tftp:
   port: 69
+  # if set external, will try open file in this filesystem, not found will fallback to embed filesystem
+  external: null
 pxe:
   default: 0
   entries:

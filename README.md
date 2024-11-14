@@ -25,6 +25,8 @@ dhcp:
   port: 67
 tftp:
   port: 69
+  # 使用外部的 tftp 目录，如果无法打开文件，会尝试在内嵌目录搜索
+  external: null
 pxe:
   # 默认打印信息，不安装任何镜像
   default: 0
@@ -34,10 +36,12 @@ pxe:
       config: pxelinux.cfg/default
     - label: 1
       display: Debian-12-bookworm-autoinstall
+      # 允许 tftp 服务器通过 http 远程下载 kernel 和 initrd ，再以 tftp 传输到目标机器，不再需要内嵌镜像 
+      prefix: http://localhost/
       kernel: images/debian-bookworm-amd64/linux
       initrd: images/debian-bookworm-amd64/initrd.gz
       # 这里的 tftp server 和 ipaddr 的值保持一致，也可以使用外部自定义的 preseed 文件
-      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/images/debian-bookworm-amd64/preseed.cfg
+      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.cfg
 ```
 
 ### Orcale VM VirtualBox
@@ -59,7 +63,7 @@ pxe:
 
 - [x] ~~当前的 pxelinux.cfg/default 文件需要渲染 tftp 地址，否则应该手动修改后重新编译。~~
 - [x] ~~允许镜像从远程拉取~~。
-- [ ] 指定额外的本地 tftp 目录。
+- [x] ~~指定额外的本地 tftp 目录~~。
 
 ## Where file from
 

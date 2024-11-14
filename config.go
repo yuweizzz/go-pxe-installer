@@ -27,7 +27,8 @@ type DHCPConfig struct {
 }
 
 type TFTPConfig struct {
-	Port int `yaml:"port"`
+	Port     int    `yaml:"port"`
+	External string `yaml:"external"`
 }
 
 type Entry struct {
