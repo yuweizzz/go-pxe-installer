@@ -58,7 +58,7 @@ pxe:
 ## Todo
 
 - [x] ~~当前的 pxelinux.cfg/default 文件需要渲染 tftp 地址，否则应该手动修改后重新编译。~~
-- [ ] 允许镜像从远程拉取。
+- [x] ~~允许镜像从远程拉取~~。
 - [ ] 指定额外的本地 tftp 目录。
 
 ## Where file from
