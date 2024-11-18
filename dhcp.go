@@ -37,9 +37,8 @@ func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv
 	Debug(m.Summary())
 
 	// 1. DHCP OpCode supported
-	// 2. DHCP pxe request
-	// 3. DHCP message type
-	// 4. update DHCP reply
+	// 2. If DHCP PXE request
+	// 3. Update DHCP reply
 
 	// 1
 	// modify from coredhcp
@@ -64,6 +63,18 @@ func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv
 	switch mt := m.MessageType(); mt {
 	case dhcpv4.MessageTypeDiscover:
 		reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeOffer))
+		// Disable PXE discovery
+		// DHCP Option 43, Suboption 6: PXE_DISCOVERY_CONTROL
+		// bit 0 = If set, disable broadcast discovery.
+		// bit 1 = If set, disable multicast discovery.
+		// bit 2 = If set, only use/accept servers in PXE_BOOT_SERVERS.
+		// bit 3 = If set, and a boot file name is present in the initial DHCP or ProxyDHCP offer packet,
+		// download the boot file (do not prompt/menu/discover).
+		// bit 4-7 = Must be 0.
+		vendorSpecificInformation := dhcpv4.Options{
+			6: []byte{8},
+		}
+		reply.UpdateOption(dhcpv4.OptGeneric(dhcpv4.OptionVendorSpecificInformation, vendorSpecificInformation.ToBytes()))
 	case dhcpv4.MessageTypeRequest:
 		reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
 	default:
@@ -71,21 +82,27 @@ func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv
 		return
 	}
 
-	// 4
+	// use Broadcast in OFFER and ACK
 	reply.SetBroadcast()
 	reply.YourIPAddr = net.IPv4(0, 0, 0, 0)
-	reply.ServerIPAddr = h.DHCPAddr
-	// Option 60
+	// Next server IP address
+	reply.ServerIPAddr = h.TFTPAddr
+	// Option 54, DHCP Server Identifier
+	reply.UpdateOption(dhcpv4.OptServerIdentifier(h.DHCPAddr))
+	reply.ServerHostName = h.DHCPAddr.String()
+	// Option 60, Vendor Class Identifier, always "PXEClient"
 	reply.UpdateOption(dhcpv4.OptClassIdentifier("PXEClient"))
-	// Option 66, Next server IP address
+	// Option 66, TFTP Server Name
 	reply.UpdateOption(dhcpv4.OptTFTPServerName(h.TFTPAddr.String()))
-	// Option 67
+	// Option 67, Boot file Name
 	if arch := m.ClientArch(); len(arch) > 0 {
 		switch arch[0] {
 		case 7:
 			// EFI_X86_64
+			reply.BootFileName = "syslinux.efi"
 			reply.UpdateOption(dhcpv4.OptBootFileName("syslinux.efi"))
 		default:
+			reply.BootFileName = "pxelinux.0"
 			reply.UpdateOption(dhcpv4.OptBootFileName("pxelinux.0"))
 		}
 	}
