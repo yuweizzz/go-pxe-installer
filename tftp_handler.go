@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	tftp "github.com/pin/tftp/v3"
 )
 
 const DefaultPxeCfgPath = "pxelinux.cfg/default"
@@ -21,12 +23,12 @@ type TFTPHandler struct {
 	PXEConfig    PXEConfig
 }
 
-func HttpReader(path string) (io.ReadCloser, error) {
+func HttpReader(path string) (io.ReadCloser, int64, error) {
 	resp, err := http.Get(path)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return resp.Body, nil
+	return resp.Body, resp.ContentLength, nil
 }
 
 func (h *TFTPHandler) PatchfilePath(path string) string {
@@ -52,10 +54,12 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	var reader any
 	// http
 	if u.Scheme == "http" || u.Scheme == "https" {
-		reader, err = HttpReader(path)
+		var size int64
+		reader, size, err = HttpReader(path)
 		if err != nil {
 			return err
 		}
+		rf.(tftp.OutgoingTransfer).SetSize(size)
 	} else if h.ExternalRoot != nil {
 		// tftp external
 		reader, err = h.ExternalRoot.Open(path)
