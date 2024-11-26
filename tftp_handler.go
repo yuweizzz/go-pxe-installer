@@ -46,6 +46,7 @@ func (h *TFTPHandler) PatchfilePath(path string) string {
 }
 
 func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
+	Debug("Incoming tftp request: ", filename)
 	path := h.PatchfilePath(filename)
 	u, err := url.Parse(path)
 	if err != nil {

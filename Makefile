@@ -1,3 +1,4 @@
+BASE_DIR := $(shell pwd)
 BIN_DIR := bin
 BIN_NAME := go-pxe-installer
 GO_FILES := $(shell find . -name "*.go" | xargs)
@@ -12,15 +13,23 @@ default: build
 lint:
 	gofmt -w $(GO_FILES)
 
+.PHONY: ipxe
+ipxe:
+	@$(BASE_DIR)/utils/ipxe.sh
+
+.PHONY: images
+images:
+	@$(BASE_DIR)/utils/images.sh
+
 .PHONY: build
 build:
-	if [ $(WITH_IMAGES) = 1 ]; then \
-		mv help/images tftpboot;    \
-	fi
 	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
-	if [ $(WITH_IMAGES) = 1 ]; then \
-		mv tftpboot/images help;    \
-	fi
+
+.PHONY: buildi
+buildi:
+	mv images tftpboot
+	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
+	mv tftpboot/images $(BASE_DIR)
 
 .PHONY: clean
 clean:

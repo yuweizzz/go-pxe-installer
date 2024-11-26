@@ -9,6 +9,13 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
 )
 
+const (
+	IPXE_SCRIPT         string = "ipxe.script"
+	AMD64_UEFI_BOOTFILE string = "ipxe-amd64.efi"
+	AMD64_BIOS_BOOTFILE string = "ipxe-amd64.pxe"
+	ARM64_UEFI_BOOTFILE string = "ipxe-arm64.efi"
+)
+
 type DHCPHandler struct {
 	DHCPAddr net.IP
 	TFTPAddr net.IP
@@ -99,12 +106,23 @@ func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv
 		switch arch[0] {
 		case 7:
 			// EFI_X86_64
-			reply.BootFileName = "syslinux.efi"
-			reply.UpdateOption(dhcpv4.OptBootFileName("syslinux.efi"))
+			reply.BootFileName = AMD64_UEFI_BOOTFILE
+			reply.UpdateOption(dhcpv4.OptBootFileName(AMD64_UEFI_BOOTFILE))
+		case 11:
+			// EFI_ARM64
+			reply.BootFileName = ARM64_UEFI_BOOTFILE
+			reply.UpdateOption(dhcpv4.OptBootFileName(ARM64_UEFI_BOOTFILE))
 		default:
-			reply.BootFileName = "pxelinux.0"
-			reply.UpdateOption(dhcpv4.OptBootFileName("pxelinux.0"))
+			// BIOS X86_64/AMD64
+			reply.BootFileName = AMD64_BIOS_BOOTFILE
+			reply.UpdateOption(dhcpv4.OptBootFileName(AMD64_BIOS_BOOTFILE))
 		}
+	}
+
+	if userClass := m.UserClass(); len(userClass) > 0 && userClass[0] == "iPXE" {
+		// iPXE Breaking the infinite loop
+		reply.BootFileName = IPXE_SCRIPT
+		reply.UpdateOption(dhcpv4.OptBootFileName(IPXE_SCRIPT))
 	}
 
 	if _, err := conn.WriteTo(reply.ToBytes(), peer); err != nil {
