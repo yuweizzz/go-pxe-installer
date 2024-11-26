@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-WORK_DIR=$(pwd)
+WORK_DIR=$(pwd)/help
 
 # amd64
 if [[ ! -f "${WORK_DIR}/images/debian-bookworm-amd64/linux" ]]; then

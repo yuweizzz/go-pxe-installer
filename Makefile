@@ -27,9 +27,11 @@ build:
 
 .PHONY: buildi
 buildi:
-	mv images tftpboot
+	mv help/images tftpboot
+	mv help/debian12-preseed.txt tftpboot
 	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
-	mv tftpboot/images $(BASE_DIR)
+	mv tftpboot/images $(BASE_DIR)/help
+	mv tftpboot/debian12-preseed.txt $(BASE_DIR)/help
 
 .PHONY: clean
 clean:

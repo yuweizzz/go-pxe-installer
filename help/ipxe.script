@@ -1,0 +1,54 @@
+#!ipxe
+
+set menu-timeout 0
+set submenu-timeout ${menu-timeout}
+set protocol tftp
+isset ${menu-default} || set menu-default ${buildarch}
+
+:start
+menu iPXE Boot Menu -- ${buildarch}-${platform}
+item --gap -- --------------------------------- Images -------------------------------
+item amd64 Debian 12 bookworm amd64
+item arm64 Debian 12 bookworm arm64
+item --gap -- -------------------------------- Advanced ------------------------------
+item --key c config [C] Configure settings
+item --key s shell [S] Drop to iPXE Shell
+item --key r reboot [R] Reboot the Computer
+item --key x exit [X] Exit iPXE and Continue BIOS Booting
+
+choose --timeout ${menu-timeout} --default ${menu-default} selected
+goto ${selected}
+
+:amd64
+set path images/debian-bookworm-amd64
+goto load
+
+:arm64
+set path images/debian-bookworm-arm64
+goto load
+
+:load
+kernel ${protocol}://${next-server}/${path}/linux initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=${protocol}://${next-server}/debian12-preseed.txt || goto failed
+initrd ${protocol}://${next-server}/${path}/initrd.gz || goto failed
+boot || goto failed
+goto start
+
+:failed
+echo Booting failed, dropping to shell
+goto shell
+
+:config
+config
+goto start
+
+:shell
+echo Type 'exit' to get the back to the menu
+shell
+set menu-timeout 0
+goto start
+
+:reboot
+reboot
+
+:exit
+exit
