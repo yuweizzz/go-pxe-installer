@@ -66,6 +66,7 @@ pxe:
 - [x] ~~指定额外的本地 tftp 目录~~。
 - [x] ~~解决 ESXi 不兼容的问题~~。
 - [x] ~~解决 UEFI 环境下远程下载不稳定的问题~~。
+- [ ] 移除 syslinux ，通过 ipxe 实现控制。
 
 ## Where file from
 
