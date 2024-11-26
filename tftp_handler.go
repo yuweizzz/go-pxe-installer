@@ -13,8 +13,7 @@ import (
 	tftp "github.com/pin/tftp/v3"
 )
 
-const DefaultPxeCfgPath = "pxelinux.cfg/default"
-const DefaultPxePrompt = "prompt"
+const iPXEScript = "ipxe.script"
 
 type TFTPHandler struct {
 	EmbedRoot    embed.FS
@@ -32,12 +31,6 @@ func HttpReader(path string) (io.ReadCloser, int64, error) {
 }
 
 func (h *TFTPHandler) PatchfilePath(path string) string {
-	for _, entry := range h.PXEConfig.Entries {
-		if path == entry.Kernel || path == entry.Initrd {
-			path = entry.Prefix + path
-			return path
-		}
-	}
 	if filepath.IsAbs(path) {
 		// use relative path to access file
 		path = strings.Replace(path, "/", "", 1)
@@ -71,10 +64,8 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	// fallback to tftp embed
 	if reader == nil {
 		switch path {
-		case DefaultPxeCfgPath:
-			reader, err = h.PXEConfig.ConfigReader()
-		case DefaultPxePrompt:
-			reader, err = h.PXEConfig.PromptReader()
+		case iPXEScript:
+			reader, err = h.PXEConfig.ScriptRender()
 		default:
 			// enter root filesystem
 			root, _ := fs.Sub(h.EmbedRoot, "tftpboot")

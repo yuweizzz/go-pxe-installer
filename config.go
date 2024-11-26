@@ -33,9 +33,7 @@ type TFTPConfig struct {
 
 type Entry struct {
 	Label   string `yaml:"label"`
-	Config  string `yaml:"config"`
 	Display string `yaml:"display"`
-	Prefix  string `yaml:"prefix`
 	Kernel  string `yaml:"kernel"`
 	Initrd  string `yaml:"initrd"`
 	Append  string `yaml:"append"`
@@ -43,6 +41,7 @@ type Entry struct {
 
 type PXEConfig struct {
 	DefaultEntry string  `yaml:"default"`
+	Timeout      int64   `yaml:"timeout"`
 	Entries      []Entry `yaml:"entries"`
 }
 
@@ -57,39 +56,62 @@ func (c *Config) ParseConfig(filepath string) {
 	}
 }
 
-func (c *PXEConfig) ConfigReader() (*bytes.Buffer, error) {
-	const BootConfigTpl = `
-{{define "entryTpl"}}LABEL {{.Label}}
-    {{if .Config}}CONFIG {{.Config}}{{end}}
-    {{if .Kernel}}KERNEL {{.Kernel}}{{end}}
-    {{if .Initrd}}INITRD {{.Initrd}}{{end}}
-    {{if .Append}}APPEND {{.Append}}{{end}}
+func (c *PXEConfig) ScriptRender() (*bytes.Buffer, error) {
+	const BootConfigTpl = `#!ipxe
+{{define "entryTpl"}}:{{.Label}}
+kernel {{.Kernel}} initrd=initrd.gz {{.Append}} || goto failed
+initrd {{.Initrd}} || goto failed
+boot || goto failed
+goto start
 {{end}}
-DEFAULT {{.DefaultEntry}}
-DISPLAY prompt
-PROMPT 1
 
-{{ range $value := .Entries }}{{ template "entryTpl" $value }}{{ end }}
+set menu-timeout {{.Timeout}}
+set submenu-timeout ${menu-timeout}
+set protocol tftp
+isset ${menu-default} || set menu-default {{.DefaultEntry}}
+
+:start
+menu iPXE Boot Menu -- ${buildarch}-${platform}
+item --gap -- --------------------------------- Images -------------------------------
+{{ with .Entries }}{{ range . }}item {{ .Label }} {{ .Display }}
+{{ end }}{{ end }}
+item --gap -- -------------------------------- Advanced ------------------------------
+item --key c config [C] Configure settings
+item --key s shell [S] Drop to iPXE Shell
+item --key r reboot [R] Reboot the Computer
+item --key x exit [X] Exit iPXE and Continue BIOS Booting
+
+choose --timeout ${menu-timeout} --default ${menu-default} selected
+goto ${selected}
+
+{{ range $value := .Entries }}{{ template "entryTpl" $value }}
+{{ end }}
+
+:failed
+echo Booting failed, dropping to shell
+goto shell
+
+:config
+config
+goto start
+
+:shell
+echo Type 'exit' to get the back to the menu
+shell
+set menu-timeout 0
+goto start
+
+:reboot
+reboot
+
+:exit
+exit
 `
 	buf := &bytes.Buffer{}
 	tpl := template.Must(template.New("BootConfigTpl").Parse(BootConfigTpl))
 	if err := tpl.ExecuteTemplate(buf, "BootConfigTpl", c); err != nil {
 		return nil, err
 	}
-	Debug("Parse 'pxelinux.cfg/default':\n", buf.String())
-	return buf, nil
-}
-
-func (c *PXEConfig) PromptReader() (*bytes.Buffer, error) {
-	const PromptTpl = `Select the boot option and Press the corresponding number:
-{{ range $key, $value := .Entries }}{{ $value.Label }}	{{ $value.Display }}
-{{ end }}
-`
-	buf := &bytes.Buffer{}
-	tpl := template.Must(template.New("PromptTpl").Parse(PromptTpl))
-	if err := tpl.ExecuteTemplate(buf, "PromptTpl", c); err != nil {
-		return nil, err
-	}
-	Debug("Parse 'prompt':\n", buf.String())
+	Debug("Parse 'ipxe.script':\n", buf.String())
 	return buf, nil
 }
