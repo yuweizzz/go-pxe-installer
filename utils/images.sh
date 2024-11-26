@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+WORK_DIR=$(pwd)
+
+# amd64
+if [[ ! -f "${WORK_DIR}/images/debian-bookworm-amd64/linux" ]]; then
+    curl -s \
+    --create-dirs \
+    -o ${WORK_DIR}/images/debian-bookworm-amd64/linux \
+    https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+fi
+
+if [[ ! -f "${WORK_DIR}/images/debian-bookworm-amd64/initrd.gz" ]]; then
+    curl -s \
+    --create-dirs \
+    -o ${WORK_DIR}/images/debian-bookworm-amd64/initrd.gz \
+    https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+fi
+
+# arm64
+if [[ ! -f "${WORK_DIR}/images/debian-bookworm-arm64/linux" ]]; then
+    curl -s \
+    --create-dirs \
+    -o ${WORK_DIR}/images/debian-bookworm-arm64/linux \
+    https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/linux
+fi
+
+if [[ ! -f "${WORK_DIR}/images/debian-bookworm-arm64/initrd.gz" ]]; then
+    curl -s \
+    --create-dirs \
+    -o ${WORK_DIR}/images/debian-bookworm-arm64/initrd.gz \
+    https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
+fi
