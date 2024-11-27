@@ -3,6 +3,11 @@
 WORK_DIR=$(pwd)
 
 apt install -y make gcc-aarch64-linux-gnu liblzma-dev
+
+git submodule init
+git submodule update
+git submodule
+
 cd ${WORK_DIR}/ipxe/src
 
 # make CROSS=aarch64-linux-gnu- bin-arm64-efi/ipxe.efi EMBED=ipxe.script

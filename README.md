@@ -8,12 +8,21 @@
 
 ```bash
 # required go version go1.21.0 and make
+
+# no embed images
+make ipxe
 make build
+
+# embed images
+make ipxe
+make images
+make buildi
 ```
 
 修改配置后可以直接运行。
 
 ```yaml
+# tftp example: no embed images
 # 修改成实际机器的网卡
 iface: enp0s3
 # 设置实际的 IP 地址
@@ -25,23 +34,26 @@ dhcp:
   port: 67
 tftp:
   port: 69
-  # 使用外部的 tftp 目录，如果无法打开文件，会尝试在内嵌目录搜索
-  external: null
+  # 使用外部的 tftp 目录，如果在外部目录无法打开文件，会尝试在内嵌目录搜索
+  external: help
 pxe:
-  # 默认打印信息，不安装任何镜像
-  default: 0
+  # default menu target, could be 'config', 'shell', 'reboot', 'exit' or entries label
+  default: shell
+  # timeout(Unit: ms), '0' means not auto choose the default option
+  timeout: 0
   entries:
-    - label: 0
-      display: help
-      config: pxelinux.cfg/default
-    - label: 1
-      display: Debian-12-bookworm-autoinstall
-      # 允许 tftp 服务器通过 http 远程下载 kernel 和 initrd ，再以 tftp 传输到目标机器，不再需要内嵌镜像 
-      prefix: http://localhost/
-      kernel: images/debian-bookworm-amd64/linux
-      initrd: images/debian-bookworm-amd64/initrd.gz
-      # 这里的 tftp server 和 ipaddr 的值保持一致，也可以使用外部自定义的 preseed 文件
-      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.cfg
+    - display: Debian 12 bookworm amd64
+      label: x86_64
+      kernel: tftp://10.0.2.5/images/debian-bookworm-amd64/linux
+      initrd: tftp://10.0.2.5/images/debian-bookworm-amd64/initrd.gz
+      # if use tftp in preseed, the tftp server should follow the value of ipaddr
+      # or use http like this: preseed/url=http://somewhere/preseed.txt
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt
+    - display: Debian 12 bookworm arm64
+      label: arm64 
+      kernel: tftp://10.0.2.5/images/debian-bookworm-arm64/linux
+      initrd: tftp://10.0.2.5/images/debian-bookworm-arm64/initrd.gz
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt
 ```
 
 ### Orcale VM VirtualBox
@@ -70,7 +82,7 @@ pxe:
 
 ## Where file from
 
-### PXE boot
+### PXE boot (deprecated)
 
 以下所有文件都基于已经安装完成的 Debian 12 系统。
 
@@ -98,22 +110,29 @@ cp /lib/syslinux/modules/efi64/ldlinux.e64 tftpboot/ldlinux.e64
 cp /usr/lib/SYSLINUX.EFI/efi64/syslinux.efi tftpboot/syslinux.efi
 ```
 
+通过 syslinux/pxelinux 支持的 bootfile 已经弃用，使用 iPXE 代替。
+
 ### Images
 
 debian-bookworm-amd64:
 
-* `linux`
-* `initrd.gz`
-
 ``` shell
-wget http://http.us.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/netboot.tar.gz
-tar -xvf netboot.tar.gz -C netboot
-cp netboot/debian-installer/amd64/linux tftpboot/images/debian-bookworm-amd64/linux
-cp netboot/debian-installer/amd64/initrd.gz tftpboot/images/debian-bookworm-amd64/initrd.gz
+# linux
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+# initrd.gz
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
 ```
 
-`preseed.cfg` is modified from `example-preseed.txt`.
+debian-bookworm-amd64:
+
+``` shell
+# linux
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/linux
+# initrd.gz
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
+```
 
 ### Others
 
-* `example-preseed.txt`: download from [d-i.debian.org](https://d-i.debian.org/manual/example-preseed.txt)
+* `example-preseed.txt`: download from [d-i.debian.org](https://d-i.debian.org/manual/example-preseed.txt), `debian12-preseed.txt` is modified from it.
+* `example-ipxe.script`: iPXE script example.
