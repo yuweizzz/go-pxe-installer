@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	IPXE_SCRIPT         string = "ipxe.script"
-	AMD64_UEFI_BOOTFILE string = "ipxe-amd64.efi"
-	AMD64_BIOS_BOOTFILE string = "ipxe-amd64.pxe"
-	ARM64_UEFI_BOOTFILE string = "ipxe-arm64.efi"
+	IPXE_SCRIPT          string = "ipxe.script"
+	X86_64_UEFI_BOOTFILE string = "ipxe-x86_64.efi"
+	X86_64_BIOS_BOOTFILE string = "ipxe-x86_64.pxe"
+	ARM64_UEFI_BOOTFILE  string = "ipxe-arm64.efi"
 )
 
 type DHCPHandler struct {
@@ -106,16 +106,16 @@ func (h *DHCPHandler) Update(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv
 		switch arch[0] {
 		case 7:
 			// EFI_X86_64
-			reply.BootFileName = AMD64_UEFI_BOOTFILE
-			reply.UpdateOption(dhcpv4.OptBootFileName(AMD64_UEFI_BOOTFILE))
+			reply.BootFileName = X86_64_UEFI_BOOTFILE
+			reply.UpdateOption(dhcpv4.OptBootFileName(X86_64_UEFI_BOOTFILE))
 		case 11:
 			// EFI_ARM64
 			reply.BootFileName = ARM64_UEFI_BOOTFILE
 			reply.UpdateOption(dhcpv4.OptBootFileName(ARM64_UEFI_BOOTFILE))
 		default:
-			// BIOS X86_64/AMD64
-			reply.BootFileName = AMD64_BIOS_BOOTFILE
-			reply.UpdateOption(dhcpv4.OptBootFileName(AMD64_BIOS_BOOTFILE))
+			// BIOS X86_64
+			reply.BootFileName = X86_64_BIOS_BOOTFILE
+			reply.UpdateOption(dhcpv4.OptBootFileName(X86_64_BIOS_BOOTFILE))
 		}
 	}
 

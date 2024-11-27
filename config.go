@@ -59,7 +59,7 @@ func (c *Config) ParseConfig(filepath string) {
 func (c *PXEConfig) ScriptRender() (*bytes.Buffer, error) {
 	const BootConfigTpl = `#!ipxe
 {{define "entryTpl"}}:{{.Label}}
-kernel {{.Kernel}} initrd=initrd.gz {{.Append}} || goto failed
+kernel {{.Kernel}} {{.Append}} || goto failed
 initrd {{.Initrd}} || goto failed
 boot || goto failed
 goto start

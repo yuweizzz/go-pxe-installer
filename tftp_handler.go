@@ -13,8 +13,6 @@ import (
 	tftp "github.com/pin/tftp/v3"
 )
 
-const iPXEScript = "ipxe.script"
-
 type TFTPHandler struct {
 	EmbedRoot    embed.FS
 	ExternalRoot fs.FS
@@ -64,7 +62,7 @@ func (h *TFTPHandler) Read(filename string, rf io.ReaderFrom) error {
 	// fallback to tftp embed
 	if reader == nil {
 		switch path {
-		case iPXEScript:
+		case IPXE_SCRIPT:
 			reader, err = h.PXEConfig.ScriptRender()
 		default:
 			// enter root filesystem

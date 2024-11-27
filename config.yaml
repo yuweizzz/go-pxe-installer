@@ -1,3 +1,4 @@
+# tftp example: no embed images
 iface: enp0s3
 # must setup ipaddr because we need to setup tftp server info
 ipaddr: 10.0.2.5
@@ -9,18 +10,22 @@ dhcp:
 tftp:
   port: 69
   # if set external, will try open file in this filesystem, not found will fallback to embed filesystem
-  external: null
+  external: help
 pxe:
-  default: 0
+  # default menu target, could be 'config', 'shell', 'reboot', 'exit' or entries label
+  default: shell
+  # timeout(Unit: ms), '0' means not auto choose the default option
+  timeout: 0
   entries:
-    - label: 0
-      display: help
-      config: pxelinux.cfg/default
-    - label: 1
-      display: Debian-12-bookworm-autoinstall
-      # allow to download "kernel" and "initrd" via http, no need to embed images, but still transfer by tftp
-      prefix: http://localhost/
-      kernel: images/debian-bookworm-amd64/linux
-      initrd: images/debian-bookworm-amd64/initrd.gz
-      # the tftp server should follow the value of ipaddr
-      append: vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.cfg
+    - display: Debian 12 bookworm amd64
+      label: x86_64
+      kernel: tftp://10.0.2.5/images/debian-bookworm-amd64/linux
+      initrd: tftp://10.0.2.5/images/debian-bookworm-amd64/initrd.gz
+      # if use tftp in preseed, the tftp server should follow the value of ipaddr
+      # or use http like this: preseed/url=http://somewhere/preseed.txt
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt
+    - display: Debian 12 bookworm arm64
+      label: arm64 
+      kernel: tftp://10.0.2.5/images/debian-bookworm-arm64/linux
+      initrd: tftp://10.0.2.5/images/debian-bookworm-arm64/initrd.gz
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt

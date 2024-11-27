@@ -1,5 +1,5 @@
 bin
 help/images
 tftpboot/ipxe-arm64.efi
-tftpboot/ipxe-amd64.efi
-tftpboot/ipxe-amd64.pxe
+tftpboot/ipxe-x86_64.efi
+tftpboot/ipxe-x86_64.pxe
