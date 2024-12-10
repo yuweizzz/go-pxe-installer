@@ -2,7 +2,7 @@
 
 WORK_DIR=$(pwd)
 
-apt install -y make gcc-aarch64-linux-gnu liblzma-dev
+# apt install -y make gcc-aarch64-linux-gnu liblzma-dev
 
 git submodule init
 git submodule update

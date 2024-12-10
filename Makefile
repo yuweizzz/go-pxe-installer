@@ -24,6 +24,8 @@ images:
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
+	cp config.yaml bin/
+	cp README.md bin/
 
 .PHONY: buildi
 buildi:
@@ -32,6 +34,8 @@ buildi:
 	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
 	mv tftpboot/images $(BASE_DIR)/help
 	mv tftpboot/debian12-preseed.txt $(BASE_DIR)/help
+	cp config.yaml bin/
+	cp README.md bin/
 
 .PHONY: clean
 clean:
