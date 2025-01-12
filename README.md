@@ -151,3 +151,7 @@ cp /usr/lib/SYSLINUX.EFI/efi64/syslinux.efi tftpboot/syslinux.efi
 ```
 
 通过 syslinux/pxelinux 支持的 bootfile 已经弃用，使用 iPXE 代替。
+
+## License
+
+[GPL-2.0 license](https://github.com/yuweizzz/go-pxe-installer/blob/master/LICENSE)

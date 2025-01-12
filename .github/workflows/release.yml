@@ -71,3 +71,4 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           files: "*.tar.gz"
+          generate_release_notes: true
