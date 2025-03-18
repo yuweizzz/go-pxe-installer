@@ -24,6 +24,8 @@ pxe:
       # if use tftp in preseed, the tftp server should follow the value of ipaddr
       # or use http like this: preseed/url=http://somewhere/preseed.txt
       append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt
+      # for QEMU nographic
+      # append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical console=ttyS0 preseed/url=tftp://10.0.2.5/debian12-preseed.txt
     - display: Debian 12 bookworm arm64
       label: arm64 
       kernel: tftp://10.0.2.5/images/debian-bookworm-arm64/linux
