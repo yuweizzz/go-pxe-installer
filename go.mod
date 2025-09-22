@@ -1,6 +1,6 @@
 module go-pxe-installer
 
-go 1.24.1
+go 1.25.1
 
 require (
 	github.com/insomniacslk/dhcp v0.0.0-20240829085014-a3a4c1f04475
