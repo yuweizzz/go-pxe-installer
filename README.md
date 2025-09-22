@@ -1,13 +1,13 @@
 ## Get started
 
-通过网络启动，在虚拟机环境下快速安装 Debian 12 。
+通过网络启动，在虚拟机环境下快速安装 Debian 12/Debian 13 。
 
 ## Build and Run
 
 执行构建。
 
 ```bash
-# required go version go1.21.0 and make
+# required go version go1.25 and make
 
 # no embed images
 make ipxe
@@ -54,7 +54,22 @@ pxe:
       kernel: tftp://10.0.2.5/images/debian-bookworm-arm64/linux
       initrd: tftp://10.0.2.5/images/debian-bookworm-arm64/initrd.gz
       append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian12-preseed.txt
+    - display: Debian 13 trixie amd64
+      label: trixie_x86_64
+      kernel: tftp://10.0.2.5/images/debian-trixie-amd64/linux
+      initrd: tftp://10.0.2.5/images/debian-trixie-amd64/initrd.gz
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian13-preseed.txt
+    - display: Debian 13 trixie arm64
+      label: trixie_arm64 
+      kernel: tftp://10.0.2.5/images/debian-trixie-arm64/linux
+      initrd: tftp://10.0.2.5/images/debian-trixie-arm64/initrd.gz
+      append: initrd=initrd.gz vga=normal fb=false auto=true priority=critical preseed/url=tftp://10.0.2.5/debian13-preseed.txt
 ```
+
+## Supported version
+
+- Debian 12 bookworm (2024/12/10)
+- Debian 13 trixie (2025/9/22)
 
 ## Supported software
 
@@ -100,22 +115,28 @@ BIOS 模式下使用 E1000/E1000e 的网络设配器， UEFI 模式下使用 VMX
 
 ### Images
 
-debian-bookworm-amd64:
+Debian 12 bookworm:
 
 ``` shell
-# linux
+# amd64 
 wget https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
-# initrd.gz
 wget https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+
+# arm64
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/linux
+wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
 ```
 
-debian-bookworm-amd64:
+Debian 13 trixie:
 
 ``` shell
-# linux
-wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/linux
-# initrd.gz
-wget https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
+# amd64
+wget https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+wget https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+
+# arm64
+wget https://deb.debian.org/debian/dists/trixie/main/installer-arm64/current/images/netboot/debian-installer/arm64/linux
+wget https://deb.debian.org/debian/dists/trixie/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
 ```
 
 ### Others

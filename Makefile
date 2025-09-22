@@ -1,6 +1,7 @@
 BASE_DIR := $(shell pwd)
 BIN_DIR := bin
 BIN_NAME := go-pxe-installer
+GO_BIN := go
 GO_FILES := $(shell find . -name "*.go" | xargs)
 
 ifndef WITH_IMAGES
@@ -23,7 +24,7 @@ images:
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
+	CGO_ENABLED=0 $(GO_BIN) build -o $(BIN_DIR)/$(BIN_NAME)
 	cp config.yaml bin/
 	cp README.md bin/
 
@@ -31,9 +32,11 @@ build:
 buildi:
 	mv help/images tftpboot
 	mv help/debian12-preseed.txt tftpboot
-	CGO_ENABLED=0 go build -o $(BIN_DIR)/$(BIN_NAME)
+	mv help/debian13-preseed.txt tftpboot
+	CGO_ENABLED=0 $(GO_BIN) build -o $(BIN_DIR)/$(BIN_NAME)
 	mv tftpboot/images $(BASE_DIR)/help
 	mv tftpboot/debian12-preseed.txt $(BASE_DIR)/help
+	mv tftpboot/debian13-preseed.txt $(BASE_DIR)/help
 	cp config.yaml bin/
 	cp README.md bin/
 
