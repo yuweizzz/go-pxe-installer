@@ -88,6 +88,8 @@ pxe:
 
 安装完成后需要重新调整启动顺序为硬盘优先。
 
+网卡异常加载 `ipxe.script` 的情况下，可以尝试安装 `VirtualBox Extension Pack` 来解决这个问题。
+
 ### VMware ESXi
 
 VMware ESXi 在硬盘启动失败时应该会默认尝试从网络启动，也可以手动进入 BIOS 配置修改启动顺序。
