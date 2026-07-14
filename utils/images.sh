@@ -34,6 +34,8 @@ if [[ ! -f "${WORK_DIR}/images/debian-bookworm-arm64/initrd.gz" ]]; then
     https://deb.debian.org/debian/dists/bookworm/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
 fi
 
+find ${WORK_DIR}/images/debian-bookworm-* -type f | xargs sha256sum > debian12.checksum
+
 # debian 13
 
 # amd64
@@ -65,3 +67,5 @@ if [[ ! -f "${WORK_DIR}/images/debian-trixie-arm64/initrd.gz" ]]; then
     -o ${WORK_DIR}/images/debian-trixie-arm64/initrd.gz \
     https://deb.debian.org/debian/dists/trixie/main/installer-arm64/current/images/netboot/debian-installer/arm64/initrd.gz
 fi
+
+find ${WORK_DIR}/images/debian-trixie-* -type f | xargs sha256sum > debian13.checksum

@@ -36,6 +36,14 @@ jobs:
         run: |
           make images
 
+      - name: Restore Checksum
+        id: restore-checksum
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            help/*.checksum
+          key: ${{ runner.os }}-checksum
+
       - name: Make build with images
         run: |
           make buildi
