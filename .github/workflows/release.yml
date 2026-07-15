@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*-*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,7 +15,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -38,13 +39,15 @@ jobs:
         run: |
           make images
 
-      - name: Restore Checksum
-        id: restore-checksum
-        uses: actions/cache/restore@v4
+      - name: Save Checksum
+        id: save-checksum
+        # https://github.com/actions/cache/tree/v5/save#always-save-cache
+        if: always()
+        uses: actions/cache/save@v5
         with:
           path: |
-            help/*.checksum
-          key: ${{ runner.os }}-checksum
+            *.checksum
+          key: checksum
 
       - name: Make build with images
         run: |
@@ -71,7 +74,7 @@ jobs:
         run: |
           for dir in $(ls)
           do
-              tar -czpf $dir.tar.gz $dir
+            tar -czpf $dir.tar.gz $dir
           done
           ls -al
 

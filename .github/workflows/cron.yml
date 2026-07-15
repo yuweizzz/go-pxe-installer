@@ -1,0 +1,61 @@
+name: Daily Check
+
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+jobs:
+  cronjob:
+    name: Daily Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Restore checksum
+        id: restore-checksum
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            *.checksum
+          key: checksum
+
+      - name: Search Debian 12 amd64 Checksum 
+        id: bookworm-checksum
+        run: |
+          RAW_CHECKSUM=$(cat debian12.checksum | grep bookworm-amd64/linux | awk '{print $1}')
+          curl -s -O https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/SHA256SUMS
+          if grep -q "$RAW_CHECKSUM" SHA256SUMS; then
+            echo "DEBIAN12_MATCH=true" >> $GITHUB_OUTPUT
+          else
+            echo "DEBIAN12_MATCH=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Search Debian 13 amd64 Checksum
+        id: trixie-checksum
+        run: |
+          RAW_CHECKSUM=$(cat debian13.checksum | grep trixie-amd64/linux | awk '{print $1}')
+          curl -s -O https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/SHA256SUMS
+          if grep -q "$RAW_CHECKSUM" SHA256SUMS; then
+            echo "DEBIAN13_MATCH=true" >> $GITHUB_OUTPUT
+          else
+            echo "DEBIAN13_MATCH=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Tag Name
+        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
+        id: tag-name
+        run: |
+          echo "TAG_NAME=v$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
+        uses: actions/checkout@v4
+
+      - name: Tag
+        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.tag-name.outputs.TAG_NAME }}
