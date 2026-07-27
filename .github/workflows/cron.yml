@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Restore checksum
         id: restore-checksum
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: |
             *.checksum
