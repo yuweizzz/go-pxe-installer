@@ -43,7 +43,7 @@ jobs:
         id: save-checksum
         # https://github.com/actions/cache/tree/v5/save#always-save-cache
         if: always()
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: |
             *.checksum
