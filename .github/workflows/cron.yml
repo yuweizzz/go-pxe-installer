@@ -51,7 +51,7 @@ jobs:
 
       - name: Checkout
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Tag
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
