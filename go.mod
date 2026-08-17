@@ -5,7 +5,7 @@ go 1.25.1
 require (
 	github.com/insomniacslk/dhcp v0.0.0-20240829085014-a3a4c1f04475
 	github.com/pin/tftp/v3 v3.2.0
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
