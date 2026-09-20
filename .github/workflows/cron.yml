@@ -47,7 +47,7 @@ jobs:
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         id: tag-name
         run: |
-          echo "TAG_NAME=v$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
 
       - name: Checkout
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
@@ -59,3 +59,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ steps.tag-name.outputs.TAG_NAME }}
+          # tag_prefix: v
