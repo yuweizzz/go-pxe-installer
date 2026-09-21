@@ -35,6 +35,7 @@ if [[ ! -f "${WORK_DIR}/images/debian-bookworm-arm64/initrd.gz" ]]; then
 fi
 
 find ${WORK_DIR}/images/debian-bookworm-* -type f | xargs sha256sum > debian12.checksum
+cat debian12.checksum
 
 # debian 13
 
@@ -69,3 +70,4 @@ if [[ ! -f "${WORK_DIR}/images/debian-trixie-arm64/initrd.gz" ]]; then
 fi
 
 find ${WORK_DIR}/images/debian-trixie-* -type f | xargs sha256sum > debian13.checksum
+cat debian13.checksum

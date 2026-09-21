@@ -27,6 +27,7 @@ jobs:
       - name: Search Debian 12 amd64 Checksum 
         id: bookworm-checksum
         run: |
+          cat debian12.checksum
           RAW_CHECKSUM=$(cat debian12.checksum | grep bookworm-amd64/linux | awk '{print $1}')
           curl -s -O https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/SHA256SUMS
           if grep -q "$RAW_CHECKSUM" SHA256SUMS; then
@@ -38,6 +39,7 @@ jobs:
       - name: Search Debian 13 amd64 Checksum
         id: trixie-checksum
         run: |
+          cat debian13.checksum
           RAW_CHECKSUM=$(cat debian13.checksum | grep trixie-amd64/linux | awk '{print $1}')
           curl -s -O https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/SHA256SUMS
           if grep -q "$RAW_CHECKSUM" SHA256SUMS; then
