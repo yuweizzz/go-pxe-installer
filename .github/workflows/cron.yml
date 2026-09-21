@@ -12,6 +12,9 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      result: ${{ steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false' }}
+
     steps:
       - name: Restore checksum
         id: restore-checksum
@@ -47,16 +50,14 @@ jobs:
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         id: tag-name
         run: |
-          echo "TAG_NAME=$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=v$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
 
       - name: Checkout
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         uses: actions/checkout@v7
 
-      - name: Tag
+      - name: Push Tag
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.tag-name.outputs.TAG_NAME }}
-          # tag_prefix: v
+        run: |
+          git tag v${{ steps.tag-name.outputs.TAG_NAME }}
+          git push origin v${{ steps.tag-name.outputs.TAG_NAME }}
