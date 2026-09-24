@@ -96,6 +96,6 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           files: |
-            "*.tar.gz"
-            "*.checksum"
+            *.tar.gz
+            checksum/*
           generate_release_notes: true
