@@ -19,7 +19,9 @@ jobs:
 
       - name: Get latest tag
         id: get-tag
-        run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+        run: |
+          echo "TAG=$(git describe --tags --abbrev=0)"
+          echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
       - name: Restore checksum
         id: restore-checksum
