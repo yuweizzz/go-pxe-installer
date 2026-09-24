@@ -54,15 +54,12 @@ jobs:
         run: |
           make images
 
-      - name: Save Checksum
-        id: save-checksum
-        # https://github.com/actions/cache/tree/v5/save#always-save-cache
-        if: always()
-        uses: actions/cache/save@v6
+      - name: Upload images checksum
+        uses: actions/upload-artifact@v7
         with:
+          name: checksum
           path: |
             *.checksum
-          key: checksum-${{ steps.resolve-tag.outputs.TAG }}
 
       - name: Make build with images
         run: |
@@ -87,7 +84,7 @@ jobs:
 
       - name: Tar artifacts
         run: |
-          for dir in $(ls)
+          for dir in $(ls|grep go-pxe-installer)
           do
             tar -czpf $dir.tar.gz $dir
           done

@@ -13,25 +13,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: robinraju/release-downloader@v1
         with:
-          fetch-depth: 0
-
-      - name: Get latest tag
-        id: get-tag
-        run: |
-          echo "TAG=$(git describe --tags --abbrev=0)"
-          echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-
-      - name: Restore checksum
-        id: restore-checksum
-        uses: actions/cache/restore@v6
-        with:
-          path: |
-            *.checksum
-          key: checksum-${{ steps.get-tag.outputs.TAG }}
-          restore-keys: |
-            checksum-
+          latest: true
+          fileName: '*.checksum'
 
       - name: Search Debian 12 amd64 Checksum 
         id: bookworm-checksum
