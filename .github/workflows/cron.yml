@@ -12,17 +12,22 @@ jobs:
     permissions:
       contents: write
 
-    outputs:
-      result: ${{ steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false' }}
-
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get-tag
+        run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
       - name: Restore checksum
         id: restore-checksum
         uses: actions/cache/restore@v6
         with:
           path: |
             *.checksum
-          key: checksum
+          key: checksum-$(steps.get-tag.outputs.TAG)
 
       - name: Search Debian 12 amd64 Checksum 
         id: bookworm-checksum
@@ -54,12 +59,16 @@ jobs:
         run: |
           echo "TAG_NAME=v$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
 
-      - name: Checkout
-        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
-        uses: actions/checkout@v7
-
       - name: Push Tag
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         run: |
           git tag ${{ steps.tag-name.outputs.TAG_NAME }}
           git push origin ${{ steps.tag-name.outputs.TAG_NAME }}
+
+      - name: Trigger release
+        uses: peter-evans/repository-dispatch@v3
+        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          event-type: auto-release
+          client-payload: '{"ref": "${{ steps.tag-name.outputs.TAG_NAME }}"}'

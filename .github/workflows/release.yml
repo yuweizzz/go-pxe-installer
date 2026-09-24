@@ -5,6 +5,8 @@ on:
     tags:
       - 'v*-*'
   workflow_dispatch:
+  repository_dispatch:
+    types: [auto-release]
 
 jobs:
   build:
@@ -14,7 +16,20 @@ jobs:
       contents: write
 
     steps:
+      - name: Resolve tag
+        id: resolve-tag
+        run: |
+          if [[ -n "${{ github.event.client_payload.ref }}" ]]; then
+            TAG="${{ github.event.client_payload.ref }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "TAG=$TAG"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.resolve-tag.outputs.TAG }}
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -32,7 +47,7 @@ jobs:
       - name: Upload artifact without images
         uses: actions/upload-artifact@v7
         with:
-          name: go-pxe-installer-${{ github.ref_name }}-${{ runner.os }}-amd64
+          name: go-pxe-installer-${{ steps.resolve-tag.outputs.TAG }}-${{ runner.os }}-amd64
           path: bin/*
 
       - name: Download images
@@ -47,7 +62,7 @@ jobs:
         with:
           path: |
             *.checksum
-          key: checksum
+          key: checksum-${{ steps.resolve-tag.outputs.TAG }}
 
       - name: Make build with images
         run: |
@@ -56,7 +71,7 @@ jobs:
       - name: Upload artifact with images
         uses: actions/upload-artifact@v7
         with:
-          name: go-pxe-installer-with-images-${{ github.ref_name }}-${{ runner.os }}-amd64
+          name: go-pxe-installer-with-images-${{ steps.resolve-tag.outputs.TAG }}-${{ runner.os }}-amd64
           path: bin/*
 
   release:
