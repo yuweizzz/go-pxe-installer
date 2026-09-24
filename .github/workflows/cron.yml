@@ -29,7 +29,7 @@ jobs:
         with:
           path: |
             *.checksum
-          key: checksum-$(steps.get-tag.outputs.TAG)
+          key: checksum-${{ steps.get-tag.outputs.TAG }}
 
       - name: Search Debian 12 amd64 Checksum 
         id: bookworm-checksum
