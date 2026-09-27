@@ -55,7 +55,7 @@ jobs:
           git push origin ${{ steps.tag-name.outputs.TAG_NAME }}
 
       - name: Trigger release
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
