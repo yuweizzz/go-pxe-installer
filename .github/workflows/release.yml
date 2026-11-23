@@ -92,7 +92,7 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v3
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event.client_payload.ref
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           files: |
