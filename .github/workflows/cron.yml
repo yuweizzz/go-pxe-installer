@@ -48,9 +48,14 @@ jobs:
         run: |
           echo "TAG_NAME=v$(date +%Y%m%d)-r1" >> $GITHUB_OUTPUT
 
+      - uses: actions/checkout@v7
+        if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
+
       - name: Push Tag
         if: steps.bookworm-checksum.outputs.DEBIAN12_MATCH == 'false' || steps.trixie-checksum.outputs.DEBIAN13_MATCH == 'false'
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag ${{ steps.tag-name.outputs.TAG_NAME }}
           git push origin ${{ steps.tag-name.outputs.TAG_NAME }}
 
