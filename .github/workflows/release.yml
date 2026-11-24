@@ -95,6 +95,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') || github.event.client_payload.ref
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
+          tag_name: ${{ github.event.client_payload.ref || github.ref_name }}
           files: |
             *.tar.gz
             checksum/*
